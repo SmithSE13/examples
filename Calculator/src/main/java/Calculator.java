@@ -18,7 +18,6 @@ public class Calculator {
     private ArrayList<Integer> listIndexCharCloseBracket = new ArrayList<>();
 
     public String evaluate(String statement) {
-        // TODO: Implement the logic here
         try {
             String patternErrorEnter = "[+\\-*/]{2}+";
             String expression = statement.replaceAll(patternErrorEnter, "");
