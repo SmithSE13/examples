@@ -18,7 +18,6 @@ public class PyramidBuilderTest {
                 {4, 0, 5, 0, 9}};
 
         int[][] pyramid = pyramidBuilder.buildPyramid(input);
-
         comparePyramids(expected, pyramid);
     }
 
@@ -34,7 +33,6 @@ public class PyramidBuilderTest {
         };
 
         int[][] pyramid = pyramidBuilder.buildPyramid(input);
-
         comparePyramids(expected, pyramid);
     }
 
@@ -51,7 +49,6 @@ public class PyramidBuilderTest {
         };
 
         int[][] pyramid = pyramidBuilder.buildPyramid(input);
-
         comparePyramids(expected, pyramid);
     }
 
@@ -66,7 +63,6 @@ public class PyramidBuilderTest {
     @Test(expected = CannotBuildException.class)
     public void buildPyramid4() {
         List<Integer> input = Arrays.asList(1, 2, 4, 8, 3, 9, null);
-
         int[][] pyramid = pyramidBuilder.buildPyramid(input);
     }
 
