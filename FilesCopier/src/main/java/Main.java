@@ -1,4 +1,3 @@
-import java.io.IOException;
 import java.nio.file.Path;
 
 public class Main {
@@ -16,6 +15,6 @@ public class Main {
         System.out.println("Копирую отсюда: \"" + filePathFromCopy.toString() +
                 "\" вот сюда: \"" + filePathForCopy.toString() + "\"");
 
-        filesCopier.copyFiles(filePathFromCopy, filePathForCopy);
+        filesCopier.copy(filePathFromCopy, filePathForCopy);
     }
 }

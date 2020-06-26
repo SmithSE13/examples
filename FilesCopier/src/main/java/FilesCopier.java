@@ -4,22 +4,12 @@ import java.util.function.Predicate;
 
 public class FilesCopier {
 
-    public void copyFiles(Path fromCopy, Path forCopy) {
-        try {
-            Files.walk(fromCopy)
-                    .forEach((path ->
-                            copy(fromCopy, forCopy, path)));
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-    }
-
-    private void copy(Path fromCopy, Path forCopy, Path file) {
+    public void copy(Path fromCopy, Path forCopy) {
         try {
             Files.walk(fromCopy)
                     .filter(Predicate.not(Files::isDirectory))
                     .forEach(path ->
-                            copyFile(file, forCopy.resolve(fromCopy.relativize(file))));
+                            copyFile(path, forCopy.resolve(fromCopy.relativize(path))));
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -27,6 +17,7 @@ public class FilesCopier {
 
     private void copyFile(Path fromCopy, Path forCopy) {
         try {
+            Files.createDirectories(forCopy);
             Files.copy(fromCopy, forCopy, StandardCopyOption.REPLACE_EXISTING);
         } catch (Exception ex) {
             ex.printStackTrace();

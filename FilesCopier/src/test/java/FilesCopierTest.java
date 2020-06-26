@@ -18,14 +18,14 @@ public class FilesCopierTest extends TestCase {
     }
 
     public void testDoCopyFiles0() throws IOException {
-        filesCopier.copyFiles(pathFromCopy, pathForCopy);
+        filesCopier.copy(pathFromCopy, pathForCopy);
         assertEquals(getLength(pathFromCopy), getLength(pathForCopy));
     }
 
     public void testDoCopyFiles1() {
         //ожидаем исключение FileAlreadyExistsException
 
-        filesCopier.copyFiles(pathFromCopy, pathForCopyThrowException);
+        filesCopier.copy(pathFromCopy, pathForCopyThrowException);
     }
 
     public long getLength(Path pathDirectory) throws IOException {
