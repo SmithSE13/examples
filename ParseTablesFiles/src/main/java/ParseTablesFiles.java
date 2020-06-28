@@ -10,11 +10,15 @@ import java.util.*;
 
 public class ParseTablesFiles {
 
-    private static final Path FILE_TO_PARSE = Paths.get("FileToParse/movementList.csv");
+    private static String pathParseFile = "FileToParse/movementList.csv";
+    private static final Path FILE_TO_PARSE = Paths.get(pathParseFile);
     private static final Logger LOGGER = LogManager.getLogger();
     private static final Marker WRONG_LINE = MarkerManager.getMarker("WRONG_LINE");
 
+    private List<Integer> listIndexBracket = new ArrayList<>();
     private List<Movement> movementList;
+    private Map<String, BigDecimal> expendituresOnOrganisations = new TreeMap<>();
+    private int countWrongLines;
 
     private static final int NUMBER_ITEM_DESCRIPTION_OPERATION = 5;
     private static final int NUMBER_ITEM_DATE_OPERATION = 3;
@@ -27,23 +31,25 @@ public class ParseTablesFiles {
             CSVReader reader = new CSVReader(new FileReader(FILE_TO_PARSE.toString()), ',');
             movementList = new ArrayList<>();
             String[] line;
-            reader.readNext();
-
             while((line = reader.readNext()) != null) {
-                if (line.length != LENGTH_MASSIVE_ITEM_LINE) {
-                    LOGGER.info(WRONG_LINE, "{}", line);
-                    throw new NotValidLineFromFileException();
+                try {
+                    if (line.length != LENGTH_MASSIVE_ITEM_LINE) {
+                        LOGGER.info(WRONG_LINE, "{}", line);
+                        throw new NotValidLineFromFileException();
+                    }
+                    Movement movement = new Movement();
+                    movement.setDateOperation(line[NUMBER_ITEM_DATE_OPERATION]);
+                    movement.setNameOrganisationOperation(getNameOperation(line[NUMBER_ITEM_DESCRIPTION_OPERATION]));
+                    movement.setComing(changeCommaOnPoint(line[NUMBER_ITEM_COMING]));
+                    movement.setExpenditure(changeCommaOnPoint(line[NUMBER_ITEM_EXPENDITURE]));
+                    movementList.add(movement);
+                } catch (Exception ex) {
+                    LOGGER.info(WRONG_LINE,"{} \n{}", line, ex.getStackTrace());
+                    countWrongLines++;
                 }
-                Movement movement = new Movement();
-                movement.setDateOperation(line[NUMBER_ITEM_DATE_OPERATION]);
-                movement.setNameOrganisationOperation(getNameOperation(line[NUMBER_ITEM_DESCRIPTION_OPERATION]));
-                movement.setComing(changeCommaOnPoint(line[NUMBER_ITEM_COMING]));
-                movement.setExpenditure(changeCommaOnPoint(line[NUMBER_ITEM_EXPENDITURE]));
-                movementList.add(movement);
             }
             reader.close();
         } catch (Exception ex) {
-            LOGGER.info(WRONG_LINE, "{}", ex.getStackTrace());
             ex.printStackTrace();
         }
     }
@@ -68,17 +74,28 @@ public class ParseTablesFiles {
                 .get();
     }
 
-    public void printListExpenditure() {
-        Map<String, BigDecimal> expendituresOnOrganisations = new TreeMap<>();
+    public Map<String, BigDecimal> getListExpenditure() {
         movementList.forEach(item ->
                     expendituresOnOrganisations.put(item.getNameOrganisationOperation(), item.getExpenditure()));
+        return expendituresOnOrganisations;
+    }
 
+    public void printListExpenditure() {
         for(Map.Entry<String, BigDecimal> entry : expendituresOnOrganisations.entrySet()) {
             String key = entry.getKey();
             BigDecimal value = entry.getValue();
             System.out.printf("%s : %s руб.\n", key, value);
         }
     }
+
+    public boolean checkOnWrongLines() {
+        return countWrongLines > 0;
+    }
+
+    public void printAmountWrongLines() {
+        System.out.println("Количество не верных строк: " + countWrongLines);
+    }
+
 
     private String getNameOperation(String descriptionOperation) {
         int numberItemNameOperation = 1;
