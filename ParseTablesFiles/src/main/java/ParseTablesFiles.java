@@ -9,8 +9,8 @@ import java.nio.file.Paths;
 import java.util.*;
 
 public class ParseTablesFiles {
-    private static String pathParseFile = "FileToParse/movementList.csv";
-    private static final Path FILE_TO_PARSE = Paths.get(pathParseFile);
+
+    private Path fileToParse;
     private static final Logger LOGGER = LogManager.getLogger();
     private static final Marker WRONG_LINE = MarkerManager.getMarker("WRONG_LINE");
 
@@ -26,18 +26,18 @@ public class ParseTablesFiles {
     private static final int LENGTH_MASSIVE_ITEM_LINE = 8;
 
     public ParseTablesFiles(String pathToParseFile) {
-        pathParseFile = pathToParseFile;
+        fileToParse = Paths.get(pathToParseFile);
     }
 
     public ParseTablesFiles(Path pathToParseFile) {
-        pathParseFile = pathToParseFile.toString();
+        fileToParse = pathToParseFile;
     }
 
     public ParseTablesFiles() {  }
 
     public void parseFile() {
         try {
-            CSVReader reader = new CSVReader(new FileReader(FILE_TO_PARSE.toString()), ',');
+            CSVReader reader = new CSVReader(new FileReader(fileToParse.toString()), ',');
             movementList = new ArrayList<>();
             String[] line;
             while((line = reader.readNext()) != null) {
