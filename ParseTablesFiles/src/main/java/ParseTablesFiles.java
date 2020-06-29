@@ -33,8 +33,6 @@ public class ParseTablesFiles {
         fileToParse = pathToParseFile;
     }
 
-    public ParseTablesFiles() {  }
-
     public void parseFile() {
         try {
             CSVReader reader = new CSVReader(new FileReader(fileToParse.toString()), ',');
