@@ -1,8 +1,11 @@
+import org.apache.logging.log4j.*;
+
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.URLConnection;
@@ -13,92 +16,103 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ParserHTML {
-    private static Document document;
-    private static URL url;
-    private static URLConnection connection;
-    private static List<String> listLinksImages = new ArrayList<>();
-    private static List<String> listLinksAudio = new ArrayList<>();
+    private URL url;
+    private URLConnection connection;
+    private final String ADDRESS_SITE;
+    private List<String> listLinks = new ArrayList<>();
 
-    public static void parseFileToImage(String addressSite, Path folderForSave) {
-        try {
-            Files.createDirectories(folderForSave);
-            document = Jsoup.connect(addressSite).get();
-            Elements linksImages = document.select("img");
-            Path nameFile = null;
+    private static final Logger LOGGER = LogManager.getLogger();
+    private static final Marker EXCEPTION = MarkerManager.getMarker("EXCEPTION");
 
-            for(int i = 0; i < linksImages.size(); i++) {
-                url = new URL(linksImages.get(i).attr("abs:src"));
-                try {
-                    nameFile = Paths.get(url.toString().replaceFirst("\\p{Punct}", "")).getFileName();
-                } catch (Exception ex) {
-                    nameFile = folderForSave.resolve("Ошибка обработки имени");
-                    ex.printStackTrace();
-                }
-                listLinksImages.add(url.toString());
-                connection = url.openConnection();
-                System.out.println(url + " " + nameFile);
-                try (InputStream inputStream = connection.getInputStream()) {
-                    Files.copy(inputStream, folderForSave.resolve(nameFile));
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-            }
-            Files.write(folderForSave.resolve("Список ссылок картинок.txt"), listLinksImages);
-            System.out.println("Все картинки скачаны");
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+    public ParserHTML(String siteAddress) {
+        ADDRESS_SITE = siteAddress;
     }
 
-    public static void parseFileToAudio(String addressSite, Path folderForSave) {
+    public List<String> parseFile(Path folderForSave, String cssQuery, String attributeKey, String comment) {
         try {
             Files.createDirectories(folderForSave);
-            document = Jsoup.connect(addressSite).get();
-            Elements linksAudio = document.select("[href$=.json]");
-            String fileName;
-
-            for(Element e : linksAudio) {
-                fileName = e.attr("title").replaceAll("Скачать трек", "")
-                        .replaceAll("\\p{Punct}", " ");
-                url = new URL(e.attr("abs:href"));
-                listLinksAudio.add(url.toString());
-                connection = url.openConnection();
-                System.out.println(url + " " + fileName);
-                try (InputStream inputStream = connection.getInputStream()) {
-                    Files.copy(inputStream, folderForSave.resolve(fileName + ".mp3"));
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-            }
-            Files.write(folderForSave.resolve("Список ссылок песен.txt"), listLinksAudio);
-            System.out.println("Все треки скачаны");
+            getResources(getElements(cssQuery),attributeKey, folderForSave);
+            Files.write(folderForSave.resolve(ADDRESS_SITE.replaceAll("\\p{Punct}", "_") + ".txt"), listLinks);
         } catch (Exception ex) {
             ex.printStackTrace();
+            LOGGER.info(EXCEPTION, "{}", ex.getStackTrace());
         }
+        return listLinks;
     }
 
-    public static void parseFileToAudio2(String addressSite, Path folderForSave) {
-        try {
-            Files.createDirectories(folderForSave);
-            document = Jsoup.connect(addressSite).get();
-            Elements linksAudio = document.select("[href$=.mp3]");
-            Path fileName;
-            for(Element e : linksAudio) {
-                url = new URL(e.attr("abs:href"));
-                fileName = (Paths.get(url.toString().replaceFirst("\\p{Punct}", ""))).getFileName();
-                listLinksAudio.add(url.toString());
+    private List<String> getResources(Elements linksElements, String attributeKey, Path folderForSave) {
+        Path nameFile;
+        int amountFiles = linksElements.size();
+        int count = 0;
+        System.out.println("Будет скачано " + linksElements.size() + " файлов");
+        for (Element linkElement : linksElements) {
+            count++;
+            try {
+                url = new URL(linkElement.attr(attributeKey));
+                nameFile = Paths.get(url.toString().replaceFirst("\\p{Punct}", "")).getFileName();
                 connection = url.openConnection();
-                System.out.println(url + " " + fileName);
-                try (InputStream inputStream = connection.getInputStream()) {
-                    Files.copy(inputStream, folderForSave.resolve(fileName));
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
+            } catch (Exception ex) {
+                nameFile = folderForSave.resolve("Ошибка обработки имени");
+                ex.printStackTrace();
+                LOGGER.info(EXCEPTION, "{}", ex.getStackTrace());
             }
-            Files.write(folderForSave.resolve("Список ссылок песен.txt"), listLinksAudio);
-            System.out.println("Все треки скачаны");
+            listLinks.add(url.toString());
+            downloadFile(nameFile, folderForSave);
+            System.out.println("Скачивание " + count + " файла из " + amountFiles + " завершено");
+        }
+        System.out.println("Загрузка данных с сайта " + ADDRESS_SITE + " завершена");
+        return listLinks;
+    }
+
+    private Elements getElements(String cssQuery) throws IOException {
+        Document document = Jsoup.connect(ADDRESS_SITE).get();
+        return document.select(cssQuery);
+    }
+
+    private void downloadFile(Path nameFile, Path folderForSave) {
+        try (InputStream inputStream = connection.getInputStream()) {
+            Files.copy(inputStream, folderForSave.resolve(nameFile));
         } catch (Exception ex) {
             ex.printStackTrace();
+            LOGGER.info(EXCEPTION, "{}", ex.getStackTrace());
         }
+        System.out.println(url + " " + nameFile);
+    }
+//*************** Специально для Zaycev.net, чтобы сохранить с нормальным названием ***************
+
+    public List<String> parseFileSpecialForZaycevNet(Path folderForSave, String cssQuery, String attributeKey, String comment) {
+        try {
+            Files.createDirectories(folderForSave);
+            getResourcesSpecialForZaycevNet(getElements(cssQuery),attributeKey, folderForSave);
+            Files.write(folderForSave.resolve(ADDRESS_SITE.replaceAll("\\p{Punct}", "_") + ".txt"), listLinks);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            LOGGER.info(EXCEPTION, "{}", ex.getStackTrace());
+        }
+        return listLinks;
+    }
+
+    private List<String> getResourcesSpecialForZaycevNet(Elements linksElements, String attributeKey, Path folderForSave) {
+        Path nameFile;
+        int amountFiles = linksElements.size();
+        int count = 0;
+        for (Element linkElement : linksElements) {
+            count++;
+            try {
+                url = new URL(linkElement.attr(attributeKey));
+                nameFile = Paths.get(linkElement.attr("title").replaceAll("Скачать трек", "")
+                        .replaceAll("\\p{Punct}", " ") + ".mp3");
+                connection = url.openConnection();
+            } catch (Exception ex) {
+                nameFile = folderForSave.resolve("Ошибка обработки имени");
+                ex.printStackTrace();
+                LOGGER.info(EXCEPTION, "{}",ex.getStackTrace());
+            }
+            listLinks.add(url.toString());
+            downloadFile(nameFile, folderForSave);
+            System.out.println("Скачивание " + count + " файла из " + amountFiles + " завершено");
+        }
+        System.out.println("Загрузка данных с сайта " + ADDRESS_SITE + " завершена");
+        return listLinks;
     }
 }

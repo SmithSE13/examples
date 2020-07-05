@@ -6,8 +6,15 @@ public class Main {
         Path forSaveImages = Paths.get("images/");
         Path forSaveMusic = Paths.get("C:/Work directory/Музыка");
 
-        ParserHTML.parseFileToImage("https://lenta.ru/", forSaveImages);
-        ParserHTML.parseFileToAudio("https://zaycev.net", forSaveMusic);
-        ParserHTML.parseFileToAudio2("https://ruq.hotmo.org/", forSaveMusic);
+        new ParserHTML("https://lenta.ru/")
+                .parseFile(forSaveImages, "img", "abs:src", "Картинки");
+//        new ParserHTML("https://muzofond.fm/")
+//                .parseFile(forSaveMusic, "li[data-url]", "data-url", "Музыка");
+        new ParserHTML("https://w1.musify.club/")
+                .parseFile(forSaveMusic, "div[data-url$=.mp3]", "abs:data-url", "Музыка");
+        new ParserHTML("https://ruq.hotmo.org/")
+                .parseFile(forSaveMusic,"[href$=.mp3]", "abs:href", "Музыка");
+        new ParserHTML("https://zaycev.net")
+                .parseFileSpecialForZaycevNet(forSaveMusic,"[href$=.json]", "abs:href", "Музыка");
     }
 }
