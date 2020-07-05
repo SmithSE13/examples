@@ -28,10 +28,17 @@ public class ParserHTML {
         ADDRESS_SITE = siteAddress;
     }
 
-    public List<String> parseFile(Path folderForSave, String cssQuery, String attributeKey, String comment) {
+    public List<String> parseFile(Path folderForSave, String cssQuery,
+                                  String attributeKey, boolean changeNameFile,
+                                  String attributeKeyForName, String regexExpressionForChange)
+    {
         try {
             Files.createDirectories(folderForSave);
-            getResources(getElements(cssQuery),attributeKey, folderForSave);
+
+            getResources(getElements(cssQuery), attributeKey,
+                    folderForSave, changeNameFile,
+                    attributeKeyForName, regexExpressionForChange);
+
             Files.write(folderForSave.resolve(ADDRESS_SITE.replaceAll("\\p{Punct}", "_") + ".txt"), listLinks);
         } catch (Exception ex) {
             ex.printStackTrace();
@@ -40,16 +47,22 @@ public class ParserHTML {
         return listLinks;
     }
 
-    private List<String> getResources(Elements linksElements, String attributeKey, Path folderForSave) {
-        Path nameFile;
+    private List<String> getResources(Elements linksElements, String attributeKey,
+                                      Path folderForSave, boolean changeNameFile,
+                                      String attributeKeyForName, String regexExpressionForChange)
+    {
         int amountFiles = linksElements.size();
-        int count = 0;
-        System.out.println("Будет скачано " + linksElements.size() + " файлов");
-        for (Element linkElement : linksElements) {
-            count++;
+        Path nameFile;
+        System.out.println("Будет скачано " + amountFiles + " файлов");
+        for (int i = 0; i <= amountFiles; ) {
             try {
+                Element linkElement = linksElements.get(i);
                 url = new URL(linkElement.attr(attributeKey));
-                nameFile = Paths.get(url.toString().replaceFirst("\\p{Punct}", "")).getFileName();
+                if (changeNameFile) {
+                    nameFile = getNameFile(linkElement, attributeKeyForName, regexExpressionForChange);
+                } else {
+                    nameFile = getNameFile(url);
+                }
                 connection = url.openConnection();
             } catch (Exception ex) {
                 nameFile = folderForSave.resolve("Ошибка обработки имени");
@@ -58,7 +71,7 @@ public class ParserHTML {
             }
             listLinks.add(url.toString());
             downloadFile(nameFile, folderForSave);
-            System.out.println("Скачивание " + count + " файла из " + amountFiles + " завершено");
+            System.out.println("Скачивание " + ++i + " файла из " + amountFiles + " завершено");
         }
         System.out.println("Загрузка данных с сайта " + ADDRESS_SITE + " завершена");
         return listLinks;
@@ -78,41 +91,13 @@ public class ParserHTML {
         }
         System.out.println(url + " " + nameFile);
     }
-//*************** Специально для Zaycev.net, чтобы сохранить с нормальным названием ***************
 
-    public List<String> parseFileSpecialForZaycevNet(Path folderForSave, String cssQuery, String attributeKey, String comment) {
-        try {
-            Files.createDirectories(folderForSave);
-            getResourcesSpecialForZaycevNet(getElements(cssQuery),attributeKey, folderForSave);
-            Files.write(folderForSave.resolve(ADDRESS_SITE.replaceAll("\\p{Punct}", "_") + ".txt"), listLinks);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            LOGGER.info(EXCEPTION, "{}", ex.getStackTrace());
-        }
-        return listLinks;
+    private Path getNameFile(URL url) {
+        return Paths.get(url.toString().replaceFirst("\\p{Punct}", "")).getFileName();
     }
 
-    private List<String> getResourcesSpecialForZaycevNet(Elements linksElements, String attributeKey, Path folderForSave) {
-        Path nameFile;
-        int amountFiles = linksElements.size();
-        int count = 0;
-        for (Element linkElement : linksElements) {
-            count++;
-            try {
-                url = new URL(linkElement.attr(attributeKey));
-                nameFile = Paths.get(linkElement.attr("title").replaceAll("Скачать трек", "")
-                        .replaceAll("\\p{Punct}", " ") + ".mp3");
-                connection = url.openConnection();
-            } catch (Exception ex) {
-                nameFile = folderForSave.resolve("Ошибка обработки имени");
-                ex.printStackTrace();
-                LOGGER.info(EXCEPTION, "{}",ex.getStackTrace());
-            }
-            listLinks.add(url.toString());
-            downloadFile(nameFile, folderForSave);
-            System.out.println("Скачивание " + count + " файла из " + amountFiles + " завершено");
-        }
-        System.out.println("Загрузка данных с сайта " + ADDRESS_SITE + " завершена");
-        return listLinks;
+    private Path getNameFile(Element element, String attributeKey, String regexExpressionForChange) {
+        return Paths.get(element.attr(attributeKey).replaceAll(regexExpressionForChange, "")
+                .replaceAll("\\p{Punct}", " ") + ".mp3");
     }
 }
