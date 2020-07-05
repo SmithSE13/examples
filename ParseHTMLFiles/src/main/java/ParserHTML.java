@@ -54,7 +54,7 @@ public class ParserHTML {
         int amountFiles = linksElements.size();
         Path nameFile;
         System.out.println("Будет скачано " + amountFiles + " файлов");
-        for (int i = 0; i <= amountFiles; ) {
+        for (int i = 0; i < amountFiles; ) {
             try {
                 Element linkElement = linksElements.get(i);
                 url = new URL(linkElement.attr(attributeKey));
