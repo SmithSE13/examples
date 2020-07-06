@@ -30,14 +30,14 @@ public class ParserHTML {
 
     public List<String> parseFile(Path folderForSave, String cssQuery,
                                   String attributeKey, boolean changeNameFile,
-                                  String attributeKeyForName, String regexExpressionForChange)
+                                  String attributeKeyForName, String regexExpressionForChange, String expansion)
     {
         try {
             Files.createDirectories(folderForSave);
 
             getResources(getElements(cssQuery), attributeKey,
                     folderForSave, changeNameFile,
-                    attributeKeyForName, regexExpressionForChange);
+                    attributeKeyForName, regexExpressionForChange, expansion);
 
             Files.write(folderForSave.resolve(ADDRESS_SITE.replaceAll("\\p{Punct}", "_") + ".txt"), listLinks);
         } catch (Exception ex) {
@@ -49,7 +49,7 @@ public class ParserHTML {
 
     private List<String> getResources(Elements linksElements, String attributeKey,
                                       Path folderForSave, boolean changeNameFile,
-                                      String attributeKeyForName, String regexExpressionForChange)
+                                      String attributeKeyForName, String regexExpressionForChange, String expansion)
     {
         int amountFiles = linksElements.size();
         Path nameFile;
@@ -59,7 +59,7 @@ public class ParserHTML {
                 Element linkElement = linksElements.get(i);
                 url = new URL(linkElement.attr(attributeKey));
                 if (changeNameFile) {
-                    nameFile = getNameFile(linkElement, attributeKeyForName, regexExpressionForChange);
+                    nameFile = getNameFile(linkElement, attributeKeyForName, regexExpressionForChange, expansion);
                 } else {
                     nameFile = getNameFile(url);
                 }
@@ -96,8 +96,8 @@ public class ParserHTML {
         return Paths.get(url.toString().replaceFirst("\\p{Punct}", "")).getFileName();
     }
 
-    private Path getNameFile(Element element, String attributeKey, String regexExpressionForChange) {
+    private Path getNameFile(Element element, String attributeKey, String regexExpressionForChange, String expansion) {
         return Paths.get(element.attr(attributeKey).replaceAll(regexExpressionForChange, "")
-                .replaceAll("\\p{Punct}", " ") + ".mp3");
+                .replaceAll("\\p{Punct}", " ") + expansion);
     }
 }
