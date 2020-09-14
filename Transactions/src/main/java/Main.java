@@ -2,7 +2,6 @@ import java.math.BigDecimal;
 
 public class Main {
     private static Bank bank = new Bank();
-    private static boolean go = false;
     private static BigDecimal before = new BigDecimal(0);
 
     public static void main(String[] args) {
@@ -12,16 +11,15 @@ public class Main {
             double money = Math.random() * 1000000;
             bank.addAccount(numAcc, money);
             if (i == 9) {
-                go = true;
                 before = bank.getSum();
             }
         }
 
-        if (go) {
-            for (int i = 0; i < 10; i++) {
-                Thread thread = new Thread(new Go());
-                thread.start();
-            }
+
+        for (int i = 0; i < 10; i++) {
+            Thread thread = new Thread(new Go());
+            thread.start();
+
         }
         try {
             Thread.sleep(30000);
