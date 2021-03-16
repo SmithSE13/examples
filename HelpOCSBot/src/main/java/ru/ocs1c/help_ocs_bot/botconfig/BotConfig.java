@@ -28,6 +28,11 @@ public class BotConfig {
     public HelpOcsTelegramBot MyOcsBot() {
         DefaultBotOptions options = ApiContext.getInstance(DefaultBotOptions.class);
 
+//        options.setProxyType(DefaultBotOptions.ProxyType.SOCKS5);
+//        options.setProxyHost("localhost");
+//        options.setProxyPort(9150);
+
+
         // Создаем бота с настройками
         HelpOcsTelegramBot myOcsBot = new HelpOcsTelegramBot(options);
         myOcsBot.setBotUserName(botUserName);

@@ -28,11 +28,15 @@ public class HelpOcsTelegramBot extends TelegramWebhookBot {
     @Override
     public BotApiMethod onWebhookUpdateReceived(Update update) {
         if (update.getMessage() != null && update.getMessage().hasText()) {
-            long chat_id = update.getMessage().getChatId();
+            Long chat_id = update.getMessage().getChatId();
             System.out.println(update.getMessage().getText());
 
+            SendMessage message = new SendMessage();
+            message.setChatId(chat_id);
+            message.setText("Hi " + update.getMessage().getText());
+
             try {
-                execute(new SendMessage(chat_id, "Hi " + update.getMessage().getText()));
+                execute(message);
             } catch (TelegramApiException e) {
                 e.printStackTrace();
             }
